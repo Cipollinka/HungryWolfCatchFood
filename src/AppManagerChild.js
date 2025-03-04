@@ -60,8 +60,8 @@ export default function AppManagerChild({navigation, route}) {
     return false;
   };
 
-  const openURLInBrowser = async url => {
-    await Linking.openURL(url);
+  const openURLInBrowser = url => {
+    Linking.openURL(url);
   };
 
   const socialLinks = [
@@ -74,23 +74,25 @@ export default function AppManagerChild({navigation, route}) {
       'https://x.com/',
       'fb://',
   ];
-  console.log(linkRefresh);
     if (checkLinkInArray(linkRefresh, socialLinks)) {
         Linking.openURL(linkRefresh);
         navigation.goBack();
     }
 
   const onShouldStartLoadWithRequest = event => {
+        console.log('onShouldStartLoadWithRequest', event);
     if (checkLinkInArray(event.url, openInBrowser)) {
-      try {
-        openURLInBrowser(event.url);
-      } catch (error) {
-        Alert.alert(
-          'Ooops',
-          "It seems you don't have the bank app installed, wait for a redirect to the payment page",
-        );
-      }
-      return false;
+        Linking.canOpenURL(event.url).then(isOpen=> {
+           if (isOpen) {
+               Linking.openURL(event.url);
+           } else{
+               Alert.alert(
+                   'Ooops',
+                   "It seems you don't have the bank app installed, wait for a redirect to the payment page",
+               );
+           }
+        });
+        return false;
     }
 
     if (checkLinkInArray(event.mainDocumentURL, redirectDomens)) {
@@ -131,6 +133,7 @@ export default function AppManagerChild({navigation, route}) {
           onError={syntEvent => {
             const {nativeEvent} = syntEvent;
             const {code} = nativeEvent;
+            console.log(syntEvent)
             if (code === -1101) {
               navigation.goBack();
             }
@@ -141,6 +144,9 @@ export default function AppManagerChild({navigation, route}) {
               );
               navigation.goBack();
             }
+          }}
+          onOpenWindow={event => {
+              console.log(event);
           }}
           allowsInlineMediaPlayback={true}
           mediaPlaybackRequiresUserAction={false}
